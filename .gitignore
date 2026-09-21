@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Modelos pesados (sube con Git LFS o Google Drive)
+*.pkl
+
+# Dataset grande (súbelo a Google Drive)
+SRI_Vehiculos_Nuevos_2026.csv
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/

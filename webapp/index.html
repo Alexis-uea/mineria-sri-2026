@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebApp — Predicción de Categoría de Vehículos SRI 2026</title>
+  <style>
+    /* ====================================================================
+       PALETA DE COLORES — Identidad UEA
+       ==================================================================== */
+    :root {
+      --uea-green:   #2E7D32;
+      --uea-green-d: #1B5E20;
+      --uea-blue:    #1565C0;
+      --uea-bg:      #F5F7FA;
+      --uea-text:    #1F2937;
+      --uea-muted:   #6B7280;
+      --uea-border:  #E5E7EB;
+      --ok:          #16A34A;
+      --warn:        #F59E0B;
+      --err:         #DC2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: var(--uea-bg);
+      color: var(--uea-text);
+      min-height: 100vh;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--uea-green) 0%, var(--uea-green-d) 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+    header h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+    header p  { font-size: 0.9rem; opacity: 0.92; }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    /* Card base */
+    .card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid var(--uea-border);
+    }
+    .card h2 {
+      font-size: 1.15rem;
+      color: var(--uea-green-d);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--uea-green);
+    }
+
+    /* Form fields */
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 0.35rem;
+      color: var(--uea-text);
+    }
+    input, select {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.95rem;
+      border: 1px solid var(--uea-border);
+      border-radius: 6px;
+      background: white;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--uea-blue);
+      box-shadow: 0 0 0 3px rgba(21,101,192,0.15);
+    }
+    .field { margin-bottom: 1rem; }
+    .hint  { font-size: 0.75rem; color: var(--uea-muted); margin-top: 0.25rem; }
+
+    /* Button */
+    button {
+      width: 100%;
+      background: var(--uea-green);
+      color: white;
+      font-weight: 600;
+      padding: 0.85rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 0.5rem;
+    }
+    button:hover:not(:disabled) { background: var(--uea-green-d); }
+    button:active:not(:disabled) { transform: scale(0.98); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Result panel */
+    #result-panel { display: none; }
+    .result-badge {
+      display: inline-block;
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin: 0.5rem 0;
+    }
+    .badge-bajo  { background: #DCFCE7; color: #166534; }
+    .badge-medio { background: #FEF3C7; color: #92400E; }
+    .badge-alto  { background: #FEE2E2; color: #991B1B; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .stat {
+      background: var(--uea-bg);
+      padding: 0.85rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--uea-blue);
+    }
+    .stat-label { font-size: 0.7rem; color: var(--uea-muted); text-transform: uppercase; }
+    .stat-value { font-size: 1.05rem; font-weight: 700; color: var(--uea-text); }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--uea-border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--uea-green), var(--uea-blue));
+      transition: width 0.6s ease;
+    }
+
+    /* Status messages */
+    .msg {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    .msg-error  { background: #FEE2E2; color: var(--err); border-left: 4px solid var(--err); }
+    .msg-warn   { background: #FEF3C7; color: var(--warn); border-left: 4px solid var(--warn); }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 0.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: var(--uea-muted);
+      font-size: 0.8rem;
+      margin-top: 1.5rem;
+    }
+    footer a { color: var(--uea-blue); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🚗 Predicción de Categoría de Vehículos — SRI 2026</h1>
+    <p>WebApp desarrollada con IA · Minería de Datos · Universidad Estatal Amazónica</p>
+  </header>
+
+  <div class="container">
+
+    <!-- ============================================================
+         PANEL IZQUIERDO — FORMULARIO DE ENTRADA
+         ============================================================ -->
+    <div class="card">
+      <h2>📊 Datos del Vehículo</h2>
+      <p style="font-size:0.85rem; color:var(--uea-muted); margin-bottom:1rem;">
+        Ingrese las características técnicas del vehículo para predecir su categoría de precio.
+      </p>
+
+      <form id="form-predecir">
+        <div class="field">
+          <label for="marca">Marca (código)</label>
+          <input type="number" id="marca" name="marca_cod"
+                 min="0" max="300" required placeholder="Ej: 145 (Shineray)" />
+          <div class="hint">Código LabelEncoder de la MARCA</div>
+        </div>
+
+        <div class="field">
+          <label for="clase">Clase (código)</label>
+          <input type="number" id="clase" name="clase_cod"
+                 min="0" max="50" required placeholder="Ej: 8 (Motocicleta)" />
+          <div class="hint">Código LabelEncoder de la CLASE</div>
+        </div>
+
+        <div class="field">
+          <label for="combustible">Tipo Combustible (código)</label>
+          <input type="number" id="combustible" name="tipo_combustible_cod"
+                 min="0" max="10" required placeholder="Ej: 1 (Gasolina)" />
+          <div class="hint">Código LabelEncoder del TIPO COMBUSTIBLE</div>
+        </div>
+
+        <div class="field">
+          <label for="cilindraje">Cilindraje (cc)</label>
+          <input type="number" id="cilindraje" name="cilindraje"
+                 min="0" max="10000" required placeholder="Ej: 150" />
+        </div>
+
+        <div class="field">
+          <label for="anio">Año del Modelo</label>
+          <input type="number" id="anio" name="anio_modelo"
+                 min="1990" max="2026" required placeholder="Ej: 2024" />
+        </div>
+
+        <button type="submit" id="btn-predecir">
+          🔮 Predecir Categoría
+        </button>
+      </form>
+    </div>
+
+    <!-- ============================================================
+         PANEL DERECHO — RESULTADO DE LA PREDICCIÓN
+         ============================================================ -->
+    <div class="card">
+      <h2>🎯 Resultado</h2>
+
+      <div id="result-empty">
+        <p style="color:var(--uea-muted); text-align:center; padding: 2rem 1rem;">
+          Complete el formulario y presione <strong>"Predecir Categoría"</strong>
+          para obtener la predicción.
+        </p>
+      </div>
+
+      <div id="result-panel">
+        <p style="font-size:0.85rem; color:var(--uea-muted); margin-bottom:0.5rem;">
+          Categoría de Precio Predicha:
+        </p>
+        <div id="result-badge" class="result-badge">—</div>
+
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="stat-label">Probabilidad</div>
+            <div class="stat-value" id="stat-prob">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Modelo usado</div>
+            <div class="stat-value" id="stat-model">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Antigüedad</div>
+            <div class="stat-value" id="stat-antiguedad">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Estado</div>
+            <div class="stat-value" id="stat-status">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="msg-zone"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 — Práctico Experimental de Minería de Datos · UEA-L-UFPTI-009</p>
+    <p>Modelo Random Forest · Accuracy 94.72% · CV_Mean (k=5): 86.00% · Dataset SRI 241,363 registros</p>
+  </footer>
+
+  <!-- ============================================================
+       LÓGICA DE LA APLICACIÓN — JAVASCRIPT
+       ============================================================ -->
+  <script>
+    /**
+     * URL base de la API FastAPI (LOCAL).
+     * Asegúrate de que la API esté corriendo con:
+     *   uvicorn api_modelo_vehiculos:app --reload --port 8000
+     */
+    const API_BASE_URL = "http://localhost:8000";
+
+    const form   = document.getElementById("form-predecir");
+    const btn    = document.getElementById("btn-predecir");
+    const empty  = document.getElementById("result-empty");
+    const panel  = document.getElementById("result-panel");
+    const badge  = document.getElementById("result-badge");
+    const prog   = document.getElementById("progress-fill");
+    const msgZ   = document.getElementById("msg-zone");
+
+    /**
+     * Maneja el submit del formulario.
+     * Construye el payload JSON y lo envía al endpoint /predecir de la API.
+     */
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msgZ.innerHTML = "";
+
+      // Deshabilitar botón y mostrar spinner
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Procesando...';
+
+      // Construir payload según el esquema VehiculoInput de la API
+      const payload = {
+        marca_cod:            parseInt(document.getElementById("marca").value),
+        clase_cod:            parseInt(document.getElementById("clase").value),
+        tipo_combustible_cod: parseInt(document.getElementById("combustible").value),
+        cilindraje:           parseInt(document.getElementById("cilindraje").value),
+        anio_modelo:          parseInt(document.getElementById("anio").value)
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/predecir`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || `Error HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        renderResultado(data, payload);
+
+      } catch (error) {
+        mostrarError("No se pudo conectar con la API. Verifique que el servidor " +
+                     "FastAPI esté corriendo en " + API_BASE_URL + ".<br>" +
+                     "Detalle: " + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "🔮 Predecir Categoría";
+      }
+    });
+
+    /**
+     * Renderiza el resultado de la predicción en el panel derecho.
+     */
+    function renderResultado(data, payload) {
+      empty.style.display = "none";
+      panel.style.display = "block";
+
+      // Categoría con badge de color
+      const cat = data.categoria_precio;
+      badge.textContent = cat.toUpperCase();
+      badge.className = "result-badge badge-" + cat.toLowerCase();
+
+      // Probabilidad y barra de progreso
+      const prob = (data.probabilidad * 100).toFixed(2);
+      document.getElementById("stat-prob").textContent = prob + "%";
+      prog.style.width = prob + "%";
+
+      // Modelo usado
+      document.getElementById("stat-model").textContent = data.modelo_usado;
+
+      // Antigüedad calculada (2026 - anio_modelo)
+      const antiguedad = Math.max(0, 2026 - payload.anio_modelo);
+      document.getElementById("stat-antiguedad").textContent = antiguedad + " años";
+
+      // Estado del vehículo
+      let estado = "Nuevo";
+      if (antiguedad > 0 && antiguedad <= 3) estado = "Seminuevo";
+      else if (antiguedad > 3) estado = "Usado";
+      document.getElementById("stat-status").textContent = estado;
+    }
+
+    /**
+     * Muestra un mensaje de error en la zona de mensajes.
+     */
+    function mostrarError(mensaje) {
+      msgZ.innerHTML = `<div class="msg msg-error">⚠️ ${mensaje}</div>`;
+      empty.style.display = "block";
+      panel.style.display = "none";
+    }
+  </script>
+</body>
+</html>
