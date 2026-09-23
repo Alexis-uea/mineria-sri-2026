@@ -14,6 +14,7 @@ Accuracy test: 94.72% | CV_Mean (k=5): 86.00%
 2) Asegurarse de tener en la misma carpeta:
    - modelo_vehiculos_sri.pkl   (descargado de Colab)
    - scaler_vehiculos_sri.pkl   (descargado de Colab)
+   - catalogo_vehiculos.py      (catálogo de mapeo nombre → código)
    - api_modelo_vehiculos.py    (este archivo)
 
 3) Levantar el servidor:
@@ -21,8 +22,9 @@ Accuracy test: 94.72% | CV_Mean (k=5): 86.00%
 
 4) Probar:
    GET  http://localhost:8000/
+   GET  http://localhost:8000/catalogos       ← listas para los dropdowns
    GET  http://localhost:8000/salud
-   POST http://localhost:8000/predecir
+   POST http://localhost:8000/predecir         ← acepta NOMBRES legibles
    Docs http://localhost:8000/docs
 =============================================================================
 """
@@ -35,6 +37,9 @@ import joblib
 import os
 import pandas as pd
 
+# Importar catálogo de mapeo nombre → código
+from catalogo_vehiculos import MARCAS, CLASES, COMBUSTIBLES
+
 
 # =============================================================================
 # 1. Configuración de la aplicación
@@ -44,9 +49,11 @@ app = FastAPI(
     description=(
         "API REST que predice la categoría de precio de un vehículo "
         "(Bajo / Medio / Alto) basándose en sus características técnicas. "
-        "Modelo: Random Forest (n_estimators=50, max_depth=10)."
+        "Modelo: Random Forest (n_estimators=50, max_depth=10). "
+        "Acepta NOMBRES legibles (marca, clase, combustible) en lugar de "
+        "códigos numéricos, facilitando el uso desde la WebApp."
     ),
-    version="1.0.0",
+    version="2.0.0",
     contact={
         "name": "Práctico Experimental — Minería de Datos UEA",
         "url": "https://www.uea.edu.ec",
@@ -56,7 +63,7 @@ app = FastAPI(
 # CORS — Permite que la WebApp (Live Server en :5500) consuma la API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],            # En producción, especifica tu dominio
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -76,8 +83,8 @@ if not os.path.exists(MODELO_PATH) or not os.path.exists(SCALER_PATH):
         "clic derecho → Descargar)."
     )
 
-modelo = joblib.load(MODELO_PATH)   # RandomForestClassifier entrenado
-scaler = joblib.load(SCALER_PATH)   # StandardScaler ajustado a X_train
+modelo = joblib.load(MODELO_PATH)
+scaler = joblib.load(SCALER_PATH)
 
 
 # =============================================================================
@@ -86,20 +93,17 @@ scaler = joblib.load(SCALER_PATH)   # StandardScaler ajustado a X_train
 class VehiculoInput(BaseModel):
     """
     Esquema de entrada para la predicción.
-    Todos los valores numéricos deben estar ya codificados (LabelEncoder)
-    y en las mismas unidades del dataset original.
+    Acepta NOMBRES legibles en lugar de códigos numéricos.
+    La API traduce los nombres internamente.
     """
-    marca_cod: int = Field(
-        ..., ge=0, le=300,
-        description="Código numérico de la MARCA (LabelEncoder)"
+    marca: str = Field(
+        ..., description="Nombre de la marca (ej: 'Shineray', 'Chevrolet')"
     )
-    clase_cod: int = Field(
-        ..., ge=0, le=50,
-        description="Código numérico de la CLASE (LabelEncoder)"
+    clase: str = Field(
+        ..., description="Nombre de la clase (ej: 'Motocicleta', 'Automóvil')"
     )
-    tipo_combustible_cod: int = Field(
-        ..., ge=0, le=10,
-        description="Código de TIPO COMBUSTIBLE (LabelEncoder)"
+    tipo_combustible: str = Field(
+        ..., description="Tipo de combustible (ej: 'Gasolina', 'Diésel')"
     )
     cilindraje: int = Field(
         ..., ge=0, le=10000,
@@ -112,12 +116,14 @@ class VehiculoInput(BaseModel):
 
 
 class PrediccionOutput(BaseModel):
-    """
-    Esquema de salida de la predicción.
-    """
+    """Esquema de salida de la predicción."""
     categoria_precio: Literal["Bajo", "Medio", "Alto"]
     probabilidad: float
     modelo_usado: str
+    marca_ingresada: str
+    clase_ingresada: str
+    combustible_ingresado: str
+    antiguedad_anios: int
 
 
 # =============================================================================
@@ -131,9 +137,11 @@ def root():
         "modelo": "RandomForestClassifier (n_estimators=50, max_depth=10)",
         "exactitud_test": 0.9472,
         "cv_mean_k5": 0.8600,
+        "version": "2.0.0 — Acepta nombres legibles en lugar de códigos",
         "endpoints": {
             "docs": "/docs",
-            "predecir": "/predecir (POST)",
+            "catalogos": "/catalogos",
+            "predecir": "/predecir (POST — con nombres)",
             "salud": "/salud"
         }
     }
@@ -145,27 +153,63 @@ def salud():
     return {"status": "ok", "modelo_cargado": True}
 
 
+@app.get("/catalogos")
+def obtener_catalogos():
+    """
+    Devuelve las listas de marcas, clases y combustibles disponibles.
+    La WebApp las usa para llenar los menús desplegables (dropdowns).
+    """
+    return {
+        "marcas":       list(MARCAS.keys()),
+        "clases":       list(CLASES.keys()),
+        "combustibles": list(COMBUSTIBLES.keys())
+    }
+
+
 @app.post("/predecir", response_model=PrediccionOutput)
 def predecir(v: VehiculoInput):
     """
     Predice la categoría de precio de un vehículo.
 
-    Algoritmo:
-      1) Construye un DataFrame con las 5 características codificadas
-      2) Calcula antiguedad_anios = 2026 - anio_modelo
-      3) Aplica StandardScaler (Z-score) ya ajustado
-      4) Ejecuta el modelo .predict() y .predict_proba()
-      5) Retorna la categoría y la probabilidad asociada
+    Flujo:
+      1) Recibe NOMBRES legibles (marca, clase, tipo_combustible)
+      2) Traduce nombres → códigos usando el catálogo
+      3) Calcula antiguedad_anios = 2026 - anio_modelo
+      4) Aplica StandardScaler (Z-score)
+      5) Ejecuta .predict() y .predict_proba()
+      6) Retorna la categoría y probabilidad
     """
     try:
-        # Feature engineering: derivar antigüedad
-        antiguedad = max(0, 2026 - v.anio_modelo)
+        # === TRADUCIR NOMBRES → CÓDIGOS ===
+        if v.marca not in MARCAS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Marca '{v.marca}' no reconocida. "
+                       f"Disponibles: {list(MARCAS.keys())}"
+            )
+        if v.clase not in CLASES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Clase '{v.clase}' no reconocida. "
+                       f"Disponibles: {list(CLASES.keys())}"
+            )
+        if v.tipo_combustible not in COMBUSTIBLES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Combustible '{v.tipo_combustible}' no reconocido. "
+                       f"Disponibles: {list(COMBUSTIBLES.keys())}"
+            )
 
-        # Construir vector de entrada en el orden exacto
+        marca_cod            = MARCAS[v.marca]
+        clase_cod            = CLASES[v.clase]
+        tipo_combustible_cod = COMBUSTIBLES[v.tipo_combustible]
+        antiguedad           = max(0, 2026 - v.anio_modelo)
+
+        # Construir vector de entrada en el orden exacto del modelo
         X_nuevo = pd.DataFrame([{
-            'MARCA_cod':                v.marca_cod,
-            'CLASE_cod':                v.clase_cod,
-            'TIPO COMBUSTIBLE_cod':     v.tipo_combustible_cod,
+            'MARCA_cod':                marca_cod,
+            'CLASE_cod':                clase_cod,
+            'TIPO COMBUSTIBLE_cod':     tipo_combustible_cod,
             'CILINDRAJE':               v.cilindraje,
             'antiguedad_anios':         antiguedad
         }])
@@ -185,9 +229,15 @@ def predecir(v: VehiculoInput):
         return PrediccionOutput(
             categoria_precio=categoria,
             probabilidad=round(prob, 4),
-            modelo_usado="RandomForestClassifier"
+            modelo_usado="RandomForestClassifier",
+            marca_ingresada=v.marca,
+            clase_ingresada=v.clase,
+            combustible_ingresado=v.tipo_combustible,
+            antiguedad_anios=antiguedad
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -196,7 +246,7 @@ def predecir(v: VehiculoInput):
 
 
 # =============================================================================
-# 5. EJECUCIÓN DIRECTA (python api_modelo_vehiculos.py)
+# 5. EJECUCIÓN DIRECTA
 # =============================================================================
 if __name__ == "__main__":
     import uvicorn
