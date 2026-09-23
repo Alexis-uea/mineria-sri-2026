@@ -38,7 +38,7 @@ import os
 import pandas as pd
 
 # Importar catálogo de mapeo nombre → código
-from catalogo_vehiculos import MARCAS, CLASES, COMBUSTIBLES
+from api.catalogo_vehiculos import MARCAS, CLASES, COMBUSTIBLES
 
 
 # =============================================================================
