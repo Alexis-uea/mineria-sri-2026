@@ -3,470 +3,2410 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebApp — Predicción de Categoría de Vehículos SRI 2026</title>
+
+  <meta
+    name="description"
+    content="Sistema de predicción de categoría de precio de vehículos del Ecuador mediante minería de datos e inteligencia artificial."
+  />
+  <meta name="theme-color" content="#1B5E20" />
+
+  <title>Predicción de Categoría de Vehículos — SRI 2026</title>
+
   <style>
     :root {
-      --uea-green:   #2E7D32;
-      --uea-green-d: #1B5E20;
-      --uea-blue:    #1565C0;
-      --uea-bg:      #F5F7FA;
-      --uea-text:    #1F2937;
-      --uea-muted:   #6B7280;
-      --uea-border:  #E5E7EB;
-      --ok:          #16A34A;
-      --warn:        #F59E0B;
-      --err:         #DC2626;
+      --uea-green: #2E7D32;
+      --uea-green-dark: #1B5E20;
+      --uea-green-light: #E8F5E9;
+
+      --uea-blue: #1565C0;
+      --uea-blue-light: #E3F2FD;
+
+      --uea-bg: #F5F7FA;
+      --uea-surface: #FFFFFF;
+
+      --uea-text: #1F2937;
+      --uea-muted: #6B7280;
+      --uea-border: #E5E7EB;
+
+      --ok: #15803D;
+      --ok-bg: #DCFCE7;
+
+      --warn: #B45309;
+      --warn-bg: #FEF3C7;
+
+      --err: #B91C1C;
+      --err-bg: #FEE2E2;
+
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: var(--uea-bg);
+      font-family:
+        Inter,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(46, 125, 50, 0.06),
+          transparent 30%
+        ),
+        var(--uea-bg);
+
       color: var(--uea-text);
       min-height: 100vh;
-      padding: 1rem;
+      padding: 20px;
       line-height: 1.6;
     }
 
-    header {
-      background: linear-gradient(135deg, var(--uea-green) 0%, var(--uea-green-d) 100%);
-      color: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      margin-bottom: 1.5rem;
+    button,
+    input,
+    select {
+      font: inherit;
     }
-    header h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
-    header p  { font-size: 0.9rem; opacity: 0.92; }
+
+    button {
+      border: 0;
+    }
+
+    .app-shell {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+    }
+
+    /* =========================================================
+       HEADER
+       ========================================================= */
+
+    header {
+      position: relative;
+      overflow: hidden;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--uea-green) 0%,
+          var(--uea-green-dark) 100%
+        );
+
+      color: white;
+
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+
+      box-shadow: var(--shadow-md);
+    }
+
+    header::before,
+    header::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      pointer-events: none;
+    }
+
+    header::before {
+      width: 220px;
+      height: 220px;
+      right: -80px;
+      top: -110px;
+    }
+
+    header::after {
+      width: 130px;
+      height: 130px;
+      left: -50px;
+      bottom: -70px;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    header h1 {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      font-size: 0.95rem;
+      opacity: 0.92;
+      max-width: 760px;
+    }
+
+    .api-status {
+      flex-shrink: 0;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 8px 12px;
+
+      background: rgba(255, 255, 255, 0.13);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+
+      border-radius: 999px;
+
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .api-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #FDE68A;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+
+    .api-dot.online {
+      background: #86EFAC;
+    }
+
+    .api-dot.offline {
+      background: #FCA5A5;
+    }
+
+    /* =========================================================
+       LAYOUT
+       ========================================================= */
 
     .container {
-      max-width: 900px;
-      margin: 0 auto;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
-    @media (max-width: 768px) {
-      .container { grid-template-columns: 1fr; }
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 20px;
     }
 
     .card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      background: var(--uea-surface);
       border: 1px solid var(--uea-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
     }
-    .card h2 {
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+
+      border-bottom: 2px solid var(--uea-green-light);
+    }
+
+    .card-title {
+      color: var(--uea-green-dark);
       font-size: 1.15rem;
-      color: var(--uea-green-d);
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--uea-green);
+      font-weight: 800;
+    }
+
+    .card-description {
+      color: var(--uea-muted);
+      font-size: 0.88rem;
+      margin-top: 4px;
+    }
+
+    /* =========================================================
+       FORMULARIO
+       ========================================================= */
+
+    .field {
+      margin-bottom: 18px;
     }
 
     label {
       display: block;
-      font-weight: 600;
-      font-size: 0.85rem;
-      margin-bottom: 0.35rem;
+      font-size: 0.86rem;
+      font-weight: 700;
+      margin-bottom: 7px;
       color: var(--uea-text);
     }
-    input, select {
+
+    .required {
+      color: var(--err);
+    }
+
+    input,
+    select {
       width: 100%;
-      padding: 0.6rem 0.75rem;
-      font-size: 0.95rem;
-      border: 1px solid var(--uea-border);
-      border-radius: 6px;
+      min-height: 46px;
+
+      padding: 10px 13px;
+
+      color: var(--uea-text);
       background: white;
-      transition: border-color 0.2s;
-    }
-    input:focus, select:focus {
+
+      border: 1px solid #D1D5DB;
+      border-radius: var(--radius-sm);
+
       outline: none;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+    }
+
+    input::placeholder {
+      color: #9CA3AF;
+    }
+
+    input:focus,
+    select:focus {
       border-color: var(--uea-blue);
-      box-shadow: 0 0 0 3px rgba(21,101,192,0.15);
+      box-shadow: 0 0 0 4px rgba(21, 101, 192, 0.11);
     }
-    .field { margin-bottom: 1rem; }
-    .hint  { font-size: 0.75rem; color: var(--uea-muted); margin-top: 0.25rem; }
 
-    button {
-      width: 100%;
-      background: var(--uea-green);
-      color: white;
+    input:disabled,
+    select:disabled {
+      background: #F9FAFB;
+      cursor: not-allowed;
+      opacity: 0.75;
+    }
+
+    .hint {
+      margin-top: 5px;
+      color: var(--uea-muted);
+      font-size: 0.75rem;
+    }
+
+    .field-error {
+      display: none;
+      margin-top: 5px;
+      color: var(--err);
+      font-size: 0.76rem;
       font-weight: 600;
-      padding: 0.85rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      margin-top: 0.5rem;
     }
-    button:hover:not(:disabled) { background: var(--uea-green-d); }
-    button:active:not(:disabled) { transform: scale(0.98); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    #result-panel { display: none; }
-    .result-badge {
-      display: inline-block;
-      padding: 0.6rem 1.2rem;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 1.25rem;
-      margin: 0.5rem 0;
+    .field.invalid input,
+    .field.invalid select {
+      border-color: var(--err);
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
     }
-    .badge-bajo  { background: #DCFCE7; color: #166534; }
-    .badge-medio { background: #FEF3C7; color: #92400E; }
-    .badge-alto  { background: #FEE2E2; color: #991B1B; }
 
-    .stat-grid {
+    .field.invalid .field-error {
+      display: block;
+    }
+
+    .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-top: 1rem;
-    }
-    .stat {
-      background: var(--uea-bg);
-      padding: 0.85rem;
-      border-radius: 8px;
-      border-left: 4px solid var(--uea-blue);
-    }
-    .stat-label { font-size: 0.7rem; color: var(--uea-muted); text-transform: uppercase; }
-    .stat-value { font-size: 1.05rem; font-weight: 700; color: var(--uea-text); }
-
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: var(--uea-border);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 0.5rem;
-    }
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--uea-green), var(--uea-blue));
-      transition: width 0.6s ease;
+      gap: 0 14px;
     }
 
-    .msg {
-      padding: 0.75rem 1rem;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
+    /* =========================================================
+       BOTONES
+       ========================================================= */
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-top: 10px;
     }
-    .msg-error  { background: #FEE2E2; color: var(--err); border-left: 4px solid var(--err); }
-    .msg-warn   { background: #FEF3C7; color: var(--warn); border-left: 4px solid var(--warn); }
-    .msg-info   { background: #DBEAFE; color: var(--uea-blue); border-left: 4px solid var(--uea-blue); }
+
+    .btn {
+      min-height: 48px;
+      border-radius: 10px;
+
+      padding: 11px 18px;
+
+      font-size: 0.95rem;
+      font-weight: 800;
+
+      cursor: pointer;
+
+      transition:
+        background-color 0.2s ease,
+        transform 0.1s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--uea-green);
+      color: white;
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.22);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--uea-green-dark);
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.28);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn-secondary {
+      background: #F3F4F6;
+      color: var(--uea-text);
+      border: 1px solid var(--uea-border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #E5E7EB;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* =========================================================
+       SPINNER
+       ========================================================= */
 
     .spinner {
       display: inline-block;
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-right: 0.5rem;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
-    footer {
-      text-align: center;
-      padding: 1rem;
-      color: var(--uea-muted);
-      font-size: 0.8rem;
-      margin-top: 1.5rem;
+      width: 17px;
+      height: 17px;
+
+      margin-right: 8px;
+
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-top-color: white;
+
+      border-radius: 50%;
+
+      animation: spin 0.8s linear infinite;
+      vertical-align: -3px;
     }
-    footer a { color: var(--uea-blue); text-decoration: none; }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* =========================================================
+       RESULTADO
+       ========================================================= */
+
+    #result-panel {
+      display: none;
+    }
+
+    .result-intro {
+      color: var(--uea-muted);
+      font-size: 0.86rem;
+      margin-bottom: 8px;
+    }
+
+    .result-main {
+      text-align: center;
+      padding: 14px 0 8px;
+    }
+
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      min-width: 160px;
+
+      padding: 10px 22px;
+      border-radius: 999px;
+
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+
+      margin: 4px 0 12px;
+    }
+
+    .badge-bajo {
+      background: var(--ok-bg);
+      color: #166534;
+    }
+
+    .badge-medio {
+      background: var(--warn-bg);
+      color: #92400E;
+    }
+
+    .badge-alto {
+      background: var(--err-bg);
+      color: #991B1B;
+    }
+
+    .badge-default {
+      background: var(--uea-blue-light);
+      color: #0C4A6E;
+    }
+
+    .confidence-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      margin-top: 8px;
+
+      color: var(--uea-muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .confidence-value {
+      color: var(--uea-text);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+
+      margin-top: 7px;
+
+      background: #E5E7EB;
+      border-radius: 999px;
+
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+
+      background:
+        linear-gradient(
+          90deg,
+          var(--uea-green),
+          var(--uea-blue)
+        );
+
+      border-radius: inherit;
+      transition: width 0.7s ease;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+
+      margin-top: 20px;
+    }
+
+    .stat {
+      min-width: 0;
+
+      padding: 14px;
+
+      background: var(--uea-bg);
+      border-radius: 11px;
+
+      border: 1px solid var(--uea-border);
+      border-left: 4px solid var(--uea-blue);
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      color: var(--uea-muted);
+
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: var(--uea-text);
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* =========================================================
+       RESUMEN
+       ========================================================= */
 
     .resumen {
-      background: var(--uea-bg);
-      padding: 0.75rem;
-      border-radius: 8px;
-      margin-top: 0.75rem;
-      font-size: 0.85rem;
+      margin-top: 18px;
+
+      padding: 14px;
+
+      background: #FAFAFA;
+      border-radius: 11px;
+
+      border: 1px solid var(--uea-border);
       border-left: 4px solid var(--uea-green);
     }
+
     .resumen-titulo {
-      font-weight: 700;
-      color: var(--uea-green-d);
-      margin-bottom: 0.35rem;
-      font-size: 0.8rem;
+      margin-bottom: 8px;
+
+      color: var(--uea-green-dark);
+
+      font-size: 0.78rem;
+      font-weight: 900;
+
+      letter-spacing: 0.05em;
       text-transform: uppercase;
     }
+
     .resumen-item {
       display: flex;
       justify-content: space-between;
-      padding: 0.2rem 0;
-      border-bottom: 1px dashed var(--uea-border);
+      gap: 20px;
+
+      padding: 7px 0;
+
+      border-bottom: 1px dashed #E5E7EB;
+      font-size: 0.84rem;
     }
-    .resumen-item:last-child { border-bottom: none; }
-    .resumen-item-label { color: var(--uea-muted); }
-    .resumen-item-value { font-weight: 600; color: var(--uea-text); }
-  </style>
-</head>
-<body>
 
-  <header>
-    <h1>🚗 Predicción de Categoría de Vehículos — SRI 2026</h1>
-    <p>WebApp desarrollada con IA · Minería de Datos · Universidad Estatal Amazónica</p>
-  </header>
+    .resumen-item:last-child {
+      border-bottom: none;
+    }
 
-  <div class="container">
+    .resumen-item-label {
+      color: var(--uea-muted);
+    }
 
-    <div class="card">
-      <h2>📊 Datos del Vehículo</h2>
-      <p style="font-size:0.85rem; color:var(--uea-muted); margin-bottom:1rem;">
-        Seleccione las características del vehículo para predecir su categoría de precio.
-      </p>
+    .resumen-item-value {
+      color: var(--uea-text);
+      font-weight: 700;
+      text-align: right;
+    }
 
-      <form id="form-predecir">
-        <div class="field">
-          <label for="marca">Marca del Vehículo</label>
-          <select id="marca" name="marca" required>
-            <option value="" disabled selected>Seleccione una marca...</option>
-          </select>
-          <div class="hint">Lista desplegable con las marcas del mercado ecuatoriano</div>
-        </div>
+    /* =========================================================
+       DISTRIBUCION DE PROBABILIDADES
+       ========================================================= */
 
-        <div class="field">
-          <label for="clase">Clase de Vehículo</label>
-          <select id="clase" name="clase" required>
-            <option value="" disabled selected>Seleccione una clase...</option>
-          </select>
-          <div class="hint">Tipo de vehículo (motocicleta, automóvil, etc.)</div>
-        </div>
+    .distribution {
+      display: none;
 
-        <div class="field">
-          <label for="combustible">Tipo de Combustible</label>
-          <select id="combustible" name="tipo_combustible" required>
-            <option value="" disabled selected>Seleccione un combustible...</option>
-          </select>
-          <div class="hint">Combustible que usa el vehículo</div>
-        </div>
+      margin-top: 18px;
+      padding: 14px;
 
-        <div class="field">
-          <label for="cilindraje">Cilindraje (cc)</label>
-          <input type="number" id="cilindraje" name="cilindraje"
-                 min="0" max="10000" required placeholder="Ej: 150" />
-          <div class="hint">Cilindraje del motor en centímetros cúbicos</div>
-        </div>
+      background: #FAFAFA;
+      border-radius: 11px;
 
-        <div class="field">
-          <label for="anio">Año del Modelo</label>
-          <input type="number" id="anio" name="anio_modelo"
-                 min="1990" max="2026" required placeholder="Ej: 2024" />
-          <div class="hint">Año de fabricación del vehículo</div>
-        </div>
+      border: 1px solid var(--uea-border);
+    }
 
-        <button type="submit" id="btn-predecir">
-          🔮 Predecir Categoría
-        </button>
-      </form>
-    </div>
+    .distribution-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: var(--uea-text);
+    }
 
-    <div class="card">
-      <h2>🎯 Resultado</h2>
+    .probability-row {
+      display: grid;
+      grid-template-columns: 90px 1fr 60px;
+      align-items: center;
+      gap: 8px;
 
-      <div id="result-empty">
-        <p style="color:var(--uea-muted); text-align:center; padding: 2rem 1rem;">
-          Complete el formulario y presione <strong>"Predecir Categoría"</strong>
-          para obtener la predicción.
-        </p>
-      </div>
+      margin-bottom: 8px;
+    }
 
-      <div id="result-panel">
-        <p style="font-size:0.85rem; color:var(--uea-muted); margin-bottom:0.5rem;">
-          Categoría de Precio Predicha:
-        </p>
-        <div id="result-badge" class="result-badge">—</div>
+    .probability-name {
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
 
-        <div class="progress-bar">
-          <div id="progress-fill" class="progress-fill" style="width:0%"></div>
-        </div>
+    .probability-track {
+      height: 7px;
+      background: #E5E7EB;
+      border-radius: 999px;
+      overflow: hidden;
+    }
 
-        <div class="stat-grid">
-          <div class="stat">
-            <div class="stat-label">Probabilidad</div>
-            <div class="stat-value" id="stat-prob">—</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Modelo usado</div>
-            <div class="stat-value" id="stat-model">—</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Antigüedad</div>
-            <div class="stat-value" id="stat-antiguedad">—</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Estado</div>
-            <div class="stat-value" id="stat-status">—</div>
-          </div>
-        </div>
+    .probability-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--uea-blue);
+      border-radius: inherit;
+      transition: width 0.5s ease;
+    }
 
-        <div class="resumen">
-          <div class="resumen-titulo">📋 Datos ingresados</div>
-          <div class="resumen-item">
-            <span class="resumen-item-label">Marca:</span>
-            <span class="resumen-item-value" id="conf-marca">—</span>
-          </div>
-          <div class="resumen-item">
-            <span class="resumen-item-label">Clase:</span>
-            <span class="resumen-item-value" id="conf-clase">—</span>
-          </div>
-          <div class="resumen-item">
-            <span class="resumen-item-label">Combustible:</span>
-            <span class="resumen-item-value" id="conf-combustible">—</span>
-          </div>
-          <div class="resumen-item">
-            <span class="resumen-item-label">Cilindraje:</span>
-            <span class="resumen-item-value" id="conf-cilindraje">—</span>
-          </div>
-          <div class="resumen-item">
-            <span class="resumen-item-label">Año modelo:</span>
-            <span class="resumen-item-value" id="conf-anio">—</span>
-          </div>
-        </div>
-      </div>
+    .probability-value {
+      font-size: 0.73rem;
+      font-weight: 800;
+      text-align: right;
+    }
 
-      <div id="msg-zone"></div>
-    </div>
-  </div>
+    /* =========================================================
+       MENSAJES
+       ========================================================= */
 
-  <footer>
-    <p>© 2026 — Práctico Experimental de Minería de Datos · UEA-L-UFPTI-009</p>
-    <p>Modelo Random Forest · Accuracy 94.72% · CV_Mean (k=5): 86.00% · Dataset SRI 241,363 registros</p>
-  </footer>
+    .msg-zone {
+      margin-top: 16px;
+    }
 
-  <script>
-    const API_BASE_URL = "https://mineria-sri-2026.onrender.com";
+    .msg {
+      padding: 11px 13px;
+      border-radius: 9px;
 
-    const form   = document.getElementById("form-predecir");
-    const btn    = document.getElementById("btn-predecir");
-    const empty  = document.getElementById("result-empty");
-    const panel  = document.getElementById("result-panel");
-    const badge  = document.getElementById("result-badge");
-    const prog   = document.getElementById("progress-fill");
-    const msgZ   = document.getElementById("msg-zone");
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
 
-    async function cargarCatalogos() {
-      try {
-        const resp = await fetch(`${API_BASE_URL}/catalogos`);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    .msg-error {
+      background: var(--err-bg);
+      color: var(--err);
+      border-left: 4px solid var(--err);
+    }
 
-        const data = await resp.json();
+    .msg-warn {
+      background: var(--warn-bg);
+      color: var(--warn);
+      border-left: 4px solid var(--warn);
+    }
 
-        const selMarca = document.getElementById("marca");
-        data.marcas.forEach(m => {
-          const opt = document.createElement("option");
-          opt.value = m;
-          opt.textContent = m;
-          selMarca.appendChild(opt);
-        });
+    .msg-info {
+      background: var(--uea-blue-light);
+      color: #0C4A6E;
+      border-left: 4px solid var(--uea-blue);
+    }
 
-        const selClase = document.getElementById("clase");
-        data.clases.forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          selClase.appendChild(opt);
-        });
+    .msg-success {
+      background: var(--ok-bg);
+      color: #166534;
+      border-left: 4px solid var(--ok);
+    }
 
-        const selComb = document.getElementById("combustible");
-        data.combustibles.forEach(co => {
-          const opt = document.createElement("option");
-          opt.value = co;
-          opt.textContent = co;
-          selComb.appendChild(opt);
-        });
+    /* =========================================================
+       ESTADO VACIO
+       ========================================================= */
 
-        mostrarInfo("✅ Catálogos cargados correctamente. Ya puede usar los menús desplegables.");
-      } catch (err) {
-        mostrarError("No se pudieron cargar los catálogos desde " + API_BASE_URL +
-                     ".<br>Verifique que la API esté corriendo.<br>Detalle: " + err.message);
+    #result-empty {
+      display: block;
+    }
+
+    .empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      min-height: 330px;
+      padding: 30px;
+
+      text-align: center;
+
+      color: var(--uea-muted);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      opacity: 0.9;
+    }
+
+    .empty-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--uea-text);
+      margin-bottom: 6px;
+    }
+
+    .empty-description {
+      max-width: 340px;
+      margin: 0 auto;
+
+      font-size: 0.84rem;
+    }
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+
+    footer {
+      padding: 22px 8px 8px;
+
+      text-align: center;
+
+      color: var(--uea-muted);
+      font-size: 0.78rem;
+    }
+
+    footer p + p {
+      margin-top: 3px;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
       }
     }
 
-    cargarCatalogos();
+    @media (max-width: 620px) {
+      body {
+        padding: 12px;
+      }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      msgZ.innerHTML = "";
+      header,
+      .card {
+        padding: 18px;
+      }
 
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Procesando...';
+      .header-top {
+        flex-direction: column;
+      }
 
-      const payload = {
-        marca:              document.getElementById("marca").value,
-        clase:              document.getElementById("clase").value,
-        tipo_combustible:   document.getElementById("combustible").value,
-        cilindraje:         parseInt(document.getElementById("cilindraje").value),
-        anio_modelo:        parseInt(document.getElementById("anio").value)
-      };
+      .form-grid,
+      .stat-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .button-group {
+        grid-template-columns: 1fr;
+      }
+
+      .resumen-item {
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .resumen-item-value {
+        text-align: left;
+      }
+
+      .probability-row {
+        grid-template-columns: 76px 1fr 55px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app-shell">
+
+    <!-- =======================================================
+         HEADER
+         ======================================================= -->
+
+    <header>
+      <div class="header-content">
+        <div class="header-top">
+          <div>
+            <h1>🚗 Predicción de Categoría de Vehículos — SRI 2026</h1>
+
+            <p>
+              Sistema de apoyo basado en minería de datos,
+              aprendizaje automático e inteligencia artificial.
+              Universidad Estatal Amazónica.
+            </p>
+          </div>
+
+          <div
+            id="api-status"
+            class="api-status"
+            aria-live="polite"
+            title="Estado de conexión con la API"
+          >
+            <span id="api-dot" class="api-dot"></span>
+            <span id="api-status-text">Comprobando API...</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- =======================================================
+         CONTENIDO PRINCIPAL
+         ======================================================= -->
+
+    <section class="container">
+
+      <!-- =====================================================
+           FORMULARIO
+           ===================================================== -->
+
+      <article class="card">
+
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📊 Datos del vehículo</h2>
+            <p class="card-description">
+              Ingrese las características utilizadas por el modelo predictivo.
+            </p>
+          </div>
+        </div>
+
+        <form id="form-predecir" novalidate>
+
+          <!-- Marca -->
+          <div class="field" id="field-marca">
+            <label for="marca">
+              Marca del vehículo <span class="required">*</span>
+            </label>
+
+            <select id="marca" name="marca" required>
+              <option value="" selected disabled>
+                Seleccione una marca...
+              </option>
+            </select>
+
+            <div class="hint">
+              Marca registrada en los datos utilizados por el sistema.
+            </div>
+
+            <div class="field-error" id="error-marca">
+              Seleccione una marca.
+            </div>
+          </div>
+
+
+          <!-- Clase -->
+          <div class="field" id="field-clase">
+            <label for="clase">
+              Clase de vehículo <span class="required">*</span>
+            </label>
+
+            <select id="clase" name="clase" required>
+              <option value="" selected disabled>
+                Seleccione una clase...
+              </option>
+            </select>
+
+            <div class="hint">
+              Tipo o clase de vehículo.
+            </div>
+
+            <div class="field-error" id="error-clase">
+              Seleccione una clase.
+            </div>
+          </div>
+
+
+          <!-- Combustible -->
+          <div class="field" id="field-combustible">
+            <label for="combustible">
+              Tipo de combustible <span class="required">*</span>
+            </label>
+
+            <select
+              id="combustible"
+              name="tipo_combustible"
+              required
+            >
+              <option value="" selected disabled>
+                Seleccione un combustible...
+              </option>
+            </select>
+
+            <div class="hint">
+              Combustible o fuente de energía registrada.
+            </div>
+
+            <div class="field-error" id="error-combustible">
+              Seleccione un tipo de combustible.
+            </div>
+          </div>
+
+
+          <!-- Datos numéricos -->
+          <div class="form-grid">
+
+            <!-- Cilindraje -->
+            <div class="field" id="field-cilindraje">
+              <label for="cilindraje">
+                Cilindraje (cc) <span class="required">*</span>
+              </label>
+
+              <input
+                type="number"
+                id="cilindraje"
+                name="cilindraje"
+                min="1"
+                max="10000"
+                step="1"
+                inputmode="numeric"
+                placeholder="Ej.: 150"
+                required
+              />
+
+              <div class="hint">
+                Cilindraje del motor en centímetros cúbicos.
+              </div>
+
+              <div class="field-error" id="error-cilindraje">
+                Ingrese un cilindraje válido entre 1 y 10.000 cc.
+              </div>
+            </div>
+
+
+            <!-- Año -->
+            <div class="field" id="field-anio">
+              <label for="anio">
+                Año del modelo <span class="required">*</span>
+              </label>
+
+              <input
+                type="number"
+                id="anio"
+                name="anio_modelo"
+                min="1990"
+                max="2026"
+                step="1"
+                inputmode="numeric"
+                placeholder="Ej.: 2024"
+                required
+              />
+
+              <div class="hint">
+                Año del modelo del vehículo.
+              </div>
+
+              <div class="field-error" id="error-anio">
+                Ingrese un año válido entre 1990 y 2026.
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- Botones -->
+          <div class="button-group">
+
+            <button
+              type="submit"
+              id="btn-predecir"
+              class="btn btn-primary"
+            >
+              🔮 Predecir categoría
+            </button>
+
+            <button
+              type="button"
+              id="btn-limpiar"
+              class="btn btn-secondary"
+            >
+              Limpiar
+            </button>
+
+          </div>
+
+        </form>
+      </article>
+
+
+      <!-- =====================================================
+           RESULTADOS
+           ===================================================== -->
+
+      <article class="card">
+
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">🎯 Resultado de la predicción</h2>
+
+            <p class="card-description">
+              Resultado generado por el modelo de aprendizaje automático.
+            </p>
+          </div>
+        </div>
+
+
+        <!-- Estado inicial -->
+        <div id="result-empty">
+          <div class="empty-state">
+            <div>
+              <div class="empty-icon">🤖</div>
+
+              <div class="empty-title">
+                Esperando una predicción
+              </div>
+
+              <p class="empty-description">
+                Complete los datos del vehículo y presione
+                <strong>“Predecir categoría”</strong>
+                para ejecutar el modelo.
+              </p>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Resultado -->
+        <div id="result-panel">
+
+          <div class="result-main">
+
+            <p class="result-intro">
+              Categoría de precio predicha
+            </p>
+
+            <div
+              id="result-badge"
+              class="result-badge badge-default"
+              aria-live="polite"
+            >
+              —
+            </div>
+
+            <div class="confidence-label">
+              <span>Confianza de la predicción</span>
+
+              <span
+                id="stat-prob"
+                class="confidence-value"
+              >
+                —
+              </span>
+            </div>
+
+            <div
+              class="progress-bar"
+              role="progressbar"
+              aria-label="Confianza de la predicción"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+            >
+              <div
+                id="progress-fill"
+                class="progress-fill"
+              ></div>
+            </div>
+
+          </div>
+
+
+          <!-- Estadísticas -->
+          <div class="stat-grid">
+
+            <div class="stat">
+              <div class="stat-label">
+                Modelo utilizado
+              </div>
+
+              <div
+                class="stat-value"
+                id="stat-model"
+              >
+                —
+              </div>
+            </div>
+
+            <div class="stat">
+              <div class="stat-label">
+                Antigüedad
+              </div>
+
+              <div
+                class="stat-value"
+                id="stat-antiguedad"
+              >
+                —
+              </div>
+            </div>
+
+            <div class="stat">
+              <div class="stat-label">
+                Estado
+              </div>
+
+              <div
+                class="stat-value"
+                id="stat-status"
+              >
+                —
+              </div>
+            </div>
+
+            <div class="stat">
+              <div class="stat-label">
+                Año de referencia
+              </div>
+
+              <div
+                class="stat-value"
+                id="stat-year"
+              >
+                2026
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- Distribución opcional -->
+          <div
+            id="distribution"
+            class="distribution"
+          >
+            <div class="distribution-title">
+              Distribución de probabilidades
+            </div>
+
+            <div id="distribution-list"></div>
+          </div>
+
+
+          <!-- Confirmación -->
+          <div class="resumen">
+
+            <div class="resumen-titulo">
+              📋 Datos utilizados
+            </div>
+
+            <div class="resumen-item">
+              <span class="resumen-item-label">
+                Marca
+              </span>
+
+              <span
+                class="resumen-item-value"
+                id="conf-marca"
+              >
+                —
+              </span>
+            </div>
+
+            <div class="resumen-item">
+              <span class="resumen-item-label">
+                Clase
+              </span>
+
+              <span
+                class="resumen-item-value"
+                id="conf-clase"
+              >
+                —
+              </span>
+            </div>
+
+            <div class="resumen-item">
+              <span class="resumen-item-label">
+                Combustible
+              </span>
+
+              <span
+                class="resumen-item-value"
+                id="conf-combustible"
+              >
+                —
+              </span>
+            </div>
+
+            <div class="resumen-item">
+              <span class="resumen-item-label">
+                Cilindraje
+              </span>
+
+              <span
+                class="resumen-item-value"
+                id="conf-cilindraje"
+              >
+                —
+              </span>
+            </div>
+
+            <div class="resumen-item">
+              <span class="resumen-item-label">
+                Año del modelo
+              </span>
+
+              <span
+                class="resumen-item-value"
+                id="conf-anio"
+              >
+                —
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Mensajes -->
+        <div
+          id="msg-zone"
+          class="msg-zone"
+          aria-live="polite"
+          aria-atomic="true"
+        ></div>
+
+      </article>
+
+    </section>
+
+
+    <!-- =======================================================
+         FOOTER
+         ======================================================= -->
+
+    <footer>
+      <p>
+        © <span id="current-year"></span>
+        — Práctico Experimental de Minería de Datos · UEA-L-UFPTI-009
+      </p>
+
+      <p>
+        Modelo Random Forest · Métricas de evaluación del proyecto
+        según la documentación de entrenamiento.
+      </p>
+    </footer>
+
+  </main>
+
+
+  <script>
+    "use strict";
+
+    /* =========================================================
+       CONFIGURACIÓN
+       ========================================================= */
+
+    const CONFIG = {
+      API_BASE_URL: "https://mineria-sri-2026.onrender.com",
+
+      ENDPOINTS: {
+        CATALOGOS: "/catalogos",
+        PREDICCION: "/predecir"
+      },
+
+      TIMEOUT_MS: 15000,
+
+      ANIO_REFERENCIA: 2026,
+
+      CILINDRAJE_MIN: 1,
+      CILINDRAJE_MAX: 10000,
+
+      ANIO_MIN: 1990,
+      ANIO_MAX: 2026
+    };
+
+
+    /* =========================================================
+       REFERENCIAS DOM
+       ========================================================= */
+
+    const form = document.getElementById("form-predecir");
+
+    const btnPredecir = document.getElementById("btn-predecir");
+    const btnLimpiar = document.getElementById("btn-limpiar");
+
+    const resultEmpty = document.getElementById("result-empty");
+    const resultPanel = document.getElementById("result-panel");
+
+    const resultBadge = document.getElementById("result-badge");
+
+    const progressBar = document.querySelector(".progress-bar");
+    const progressFill = document.getElementById("progress-fill");
+
+    const msgZone = document.getElementById("msg-zone");
+
+    const apiDot = document.getElementById("api-dot");
+    const apiStatusText = document.getElementById("api-status-text");
+
+    const distribution = document.getElementById("distribution");
+    const distributionList = document.getElementById("distribution-list");
+
+    const currentYearElement =
+      document.getElementById("current-year");
+
+
+    /* =========================================================
+       INICIALIZACIÓN
+       ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      currentYearElement.textContent =
+        new Date().getFullYear();
+
+      await cargarCatalogos();
+      await comprobarAPI();
+    });
+
+
+    /* =========================================================
+       CARGAR CATÁLOGOS
+       ========================================================= */
+
+    async function cargarCatalogos() {
+      setSelectsLoading(true);
 
       try {
-        const response = await fetch(`${API_BASE_URL}/predecir`, {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify(payload)
-        });
+        const data = await fetchJSON(
+          `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CATALOGOS}`
+        );
 
-        if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.detail || `Error HTTP ${response.status}`);
-        }
+        llenarSelect("marca", data.marcas);
+        llenarSelect("clase", data.clases);
+        llenarSelect("combustible", data.combustibles);
 
-        const data = await response.json();
-        renderResultado(data, payload);
+        mostrarMensaje(
+          "success",
+          "✅ Los catálogos se cargaron correctamente."
+        );
 
       } catch (error) {
-        mostrarError("Error al conectar con la API. Verifique que el servidor " +
-                     "FastAPI esté corriendo en " + API_BASE_URL + ".<br>" +
-                     "Detalle: " + error.message);
+
+        mostrarMensaje(
+          "error",
+          `⚠️ No fue posible cargar los catálogos.
+           Verifique que la API esté disponible.
+           Detalle: ${obtenerMensajeError(error)}`
+        );
+
+        establecerEstadoAPI(false);
+
       } finally {
-        btn.disabled = false;
-        btn.innerHTML = "🔮 Predecir Categoría";
+        setSelectsLoading(false);
+      }
+    }
+
+
+    /* =========================================================
+       LLENAR SELECT
+       ========================================================= */
+
+    function llenarSelect(id, items) {
+      const select = document.getElementById(id);
+
+      if (!Array.isArray(items)) {
+        return;
+      }
+
+      items.forEach(item => {
+
+        const option = document.createElement("option");
+
+        /*
+         * Permite trabajar tanto con:
+         *
+         * ["Toyota", "Chevrolet"]
+         *
+         * como con:
+         *
+         * [
+         *   { value: "TOYOTA", label: "Toyota" }
+         * ]
+         */
+
+        if (
+          typeof item === "object" &&
+          item !== null
+        ) {
+          option.value =
+            item.value ??
+            item.codigo ??
+            item.nombre ??
+            "";
+
+          option.textContent =
+            item.label ??
+            item.nombre ??
+            item.value ??
+            "";
+
+        } else {
+          option.value = String(item);
+          option.textContent = String(item);
+        }
+
+        if (option.value !== "") {
+          select.appendChild(option);
+        }
+      });
+    }
+
+
+    /* =========================================================
+       ESTADO DE SELECTS
+       ========================================================= */
+
+    function setSelectsLoading(loading) {
+
+      const selects = [
+        document.getElementById("marca"),
+        document.getElementById("clase"),
+        document.getElementById("combustible")
+      ];
+
+      selects.forEach(select => {
+        select.disabled = loading;
+      });
+
+      if (loading) {
+        apiStatusText.textContent =
+          "Cargando catálogos...";
+      }
+    }
+
+
+    /* =========================================================
+       COMPROBAR API
+       ========================================================= */
+
+    async function comprobarAPI() {
+
+      /*
+       * No se presupone que exista /health.
+       * Se verifica indirectamente mediante /catalogos.
+       */
+
+      try {
+
+        const response = await fetch(
+          `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CATALOGOS}`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json"
+            },
+            cache: "no-store"
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        establecerEstadoAPI(true);
+
+      } catch (error) {
+
+        establecerEstadoAPI(false);
+      }
+    }
+
+
+    /* =========================================================
+       ESTADO DE API
+       ========================================================= */
+
+    function establecerEstadoAPI(online) {
+
+      apiDot.classList.remove(
+        "online",
+        "offline"
+      );
+
+      if (online) {
+
+        apiDot.classList.add("online");
+
+        apiStatusText.textContent =
+          "API disponible";
+
+      } else {
+
+        apiDot.classList.add("offline");
+
+        apiStatusText.textContent =
+          "API no disponible";
+      }
+    }
+
+
+    /* =========================================================
+       SUBMIT
+       ========================================================= */
+
+    form.addEventListener("submit", async event => {
+
+      event.preventDefault();
+
+      limpiarMensajes();
+
+      if (!validarFormulario()) {
+        mostrarMensaje(
+          "warn",
+          "Revise los campos marcados antes de continuar."
+        );
+        return;
+      }
+
+      const payload = obtenerPayload();
+
+      activarEstadoCarga(true);
+
+      try {
+
+        const data = await fetchJSON(
+          `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.PREDICCION}`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json"
+            },
+
+            body: JSON.stringify(payload)
+          }
+        );
+
+        establecerEstadoAPI(true);
+
+        renderResultado(
+          data,
+          payload
+        );
+
+        mostrarMensaje(
+          "success",
+          "✅ Predicción generada correctamente."
+        );
+
+      } catch (error) {
+
+        establecerEstadoAPI(false);
+
+        mostrarErrorPrediccion(error);
+
+      } finally {
+
+        activarEstadoCarga(false);
       }
     });
 
+
+    /* =========================================================
+       VALIDACIÓN
+       ========================================================= */
+
+    function validarFormulario() {
+
+      limpiarErroresValidacion();
+
+      let valido = true;
+
+      const marca =
+        document.getElementById("marca").value.trim();
+
+      const clase =
+        document.getElementById("clase").value.trim();
+
+      const combustible =
+        document.getElementById("combustible").value.trim();
+
+      const cilindraje =
+        Number(document.getElementById("cilindraje").value);
+
+      const anio =
+        Number(document.getElementById("anio").value);
+
+
+      if (!marca) {
+        marcarCampoInvalido("marca");
+        valido = false;
+      }
+
+      if (!clase) {
+        marcarCampoInvalido("clase");
+        valido = false;
+      }
+
+      if (!combustible) {
+        marcarCampoInvalido("combustible");
+        valido = false;
+      }
+
+      if (
+        !Number.isInteger(cilindraje) ||
+        cilindraje < CONFIG.CILINDRAJE_MIN ||
+        cilindraje > CONFIG.CILINDRAJE_MAX
+      ) {
+        marcarCampoInvalido("cilindraje");
+        valido = false;
+      }
+
+      if (
+        !Number.isInteger(anio) ||
+        anio < CONFIG.ANIO_MIN ||
+        anio > CONFIG.ANIO_MAX
+      ) {
+        marcarCampoInvalido("anio");
+        valido = false;
+      }
+
+      return valido;
+    }
+
+
+    function marcarCampoInvalido(nombre) {
+
+      const field = document.getElementById(
+        `field-${nombre}`
+      );
+
+      if (field) {
+        field.classList.add("invalid");
+      }
+    }
+
+
+    function limpiarErroresValidacion() {
+
+      document
+        .querySelectorAll(".field.invalid")
+        .forEach(field => {
+          field.classList.remove("invalid");
+        });
+    }
+
+
+    /* =========================================================
+       PAYLOAD
+       ========================================================= */
+
+    function obtenerPayload() {
+
+      return {
+        marca:
+          document.getElementById("marca").value,
+
+        clase:
+          document.getElementById("clase").value,
+
+        tipo_combustible:
+          document.getElementById("combustible").value,
+
+        cilindraje:
+          Number(
+            document.getElementById("cilindraje").value
+          ),
+
+        anio_modelo:
+          Number(
+            document.getElementById("anio").value
+          )
+      };
+    }
+
+
+    /* =========================================================
+       PETICIÓN HTTP ROBUSTA
+       ========================================================= */
+
+    async function fetchJSON(url, options = {}) {
+
+      const controller = new AbortController();
+
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        CONFIG.TIMEOUT_MS
+      );
+
+      try {
+
+        const response = await fetch(
+          url,
+          {
+            ...options,
+            signal: controller.signal
+          }
+        );
+
+        const contentType =
+          response.headers.get("content-type") || "";
+
+        let data = null;
+
+        if (contentType.includes("application/json")) {
+          data = await response.json();
+        } else {
+          const text = await response.text();
+          data = text ? { detail: text } : null;
+        }
+
+        if (!response.ok) {
+
+          const detail =
+            extraerDetalleAPI(data) ||
+            `HTTP ${response.status}`;
+
+          const error = new Error(detail);
+
+          error.status = response.status;
+          error.payload = data;
+
+          throw error;
+        }
+
+        return data;
+
+      } catch (error) {
+
+        if (error.name === "AbortError") {
+          throw new Error(
+            "La solicitud superó el tiempo máximo de espera."
+          );
+        }
+
+        throw error;
+
+      } finally {
+
+        clearTimeout(timeoutId);
+      }
+    }
+
+
+    /* =========================================================
+       EXTRAER ERROR FASTAPI
+       ========================================================= */
+
+    function extraerDetalleAPI(data) {
+
+      if (!data) {
+        return "";
+      }
+
+      if (typeof data.detail === "string") {
+        return data.detail;
+      }
+
+      if (Array.isArray(data.detail)) {
+
+        return data.detail
+          .map(item => {
+
+            if (typeof item === "string") {
+              return item;
+            }
+
+            return (
+              item?.msg ||
+              item?.message ||
+              JSON.stringify(item)
+            );
+          })
+          .join(" | ");
+      }
+
+      if (data.message) {
+        return String(data.message);
+      }
+
+      return "";
+    }
+
+
+    /* =========================================================
+       RENDERIZAR RESULTADO
+       ========================================================= */
+
     function renderResultado(data, payload) {
-      empty.style.display = "none";
-      panel.style.display = "block";
 
-      const cat = data.categoria_precio;
-      badge.textContent = cat.toUpperCase();
-      badge.className = "result-badge badge-" + cat.toLowerCase();
+      resultEmpty.style.display = "none";
+      resultPanel.style.display = "block";
 
-      const prob = (data.probabilidad * 100).toFixed(2);
-      document.getElementById("stat-prob").textContent = prob + "%";
-      prog.style.width = prob + "%";
+      const categoria =
+        normalizarCategoria(
+          data?.categoria_precio
+        );
 
-      document.getElementById("stat-model").textContent = data.modelo_usado;
+      const probabilidad =
+        normalizarProbabilidad(
+          data?.probabilidad
+        );
 
-      const antiguedad = data.antiguedad_anios;
-      document.getElementById("stat-antiguedad").textContent = antiguedad + " años";
+      const antiguedad =
+        Number.isFinite(
+          Number(data?.antiguedad_anios)
+        )
+          ? Number(data.antiguedad_anios)
+          : calcularAntiguedad(payload.anio_modelo);
 
-      let estado = "Nuevo";
-      if (antiguedad > 0 && antiguedad <= 3) estado = "Seminuevo";
-      else if (antiguedad > 3) estado = "Usado";
-      document.getElementById("stat-status").textContent = estado;
+      /* Categoría */
 
-      document.getElementById("conf-marca").textContent        = data.marca_ingresada;
-      document.getElementById("conf-clase").textContent        = data.clase_ingresada;
-      document.getElementById("conf-combustible").textContent  = data.combustible_ingresado;
-      document.getElementById("conf-cilindraje").textContent    = payload.cilindraje + " cc";
-      document.getElementById("conf-anio").textContent         = payload.anio_modelo;
+      resultBadge.textContent =
+        categoria.label.toUpperCase();
+
+      resultBadge.className =
+        `result-badge ${categoria.cssClass}`;
+
+
+      /* Probabilidad */
+
+      const porcentaje =
+        (probabilidad * 100).toFixed(2);
+
+      document.getElementById(
+        "stat-prob"
+      ).textContent = `${porcentaje}%`;
+
+      progressFill.style.width =
+        `${Math.min(probabilidad * 100, 100)}%`;
+
+      progressBar.setAttribute(
+        "aria-valuenow",
+        String(Math.round(probabilidad * 100))
+      );
+
+
+      /* Modelo */
+
+      document.getElementById(
+        "stat-model"
+      ).textContent =
+        data?.modelo_usado ||
+        "No especificado";
+
+
+      /* Antigüedad */
+
+      document.getElementById(
+        "stat-antiguedad"
+      ).textContent =
+        `${antiguedad} ${
+          antiguedad === 1 ? "año" : "años"
+        }`;
+
+
+      /* Estado */
+
+      document.getElementById(
+        "stat-status"
+      ).textContent =
+        obtenerEstadoVehiculo(antiguedad);
+
+
+      /* Año */
+
+      document.getElementById(
+        "stat-year"
+      ).textContent =
+        CONFIG.ANIO_REFERENCIA;
+
+
+      /* Datos */
+
+      document.getElementById(
+        "conf-marca"
+      ).textContent =
+        data?.marca_ingresada ||
+        payload.marca;
+
+      document.getElementById(
+        "conf-clase"
+      ).textContent =
+        data?.clase_ingresada ||
+        payload.clase;
+
+      document.getElementById(
+        "conf-combustible"
+      ).textContent =
+        data?.combustible_ingresado ||
+        payload.tipo_combustible;
+
+      document.getElementById(
+        "conf-cilindraje"
+      ).textContent =
+        `${formatearNumero(payload.cilindraje)} cc`;
+
+      document.getElementById(
+        "conf-anio"
+      ).textContent =
+        payload.anio_modelo;
+
+
+      /* Distribución opcional */
+
+      renderDistribucion(
+        data?.probabilidades ||
+        data?.distribucion_probabilidades ||
+        data?.probability_distribution
+      );
     }
 
-    function mostrarError(mensaje) {
-      msgZ.innerHTML = `<div class="msg msg-error">⚠️ ${mensaje}</div>`;
-      empty.style.display = "block";
-      panel.style.display = "none";
+
+    /* =========================================================
+       NORMALIZAR CATEGORÍA
+       ========================================================= */
+
+    function normalizarCategoria(valor) {
+
+      const original =
+        String(valor || "")
+          .trim();
+
+      const limpio =
+        original
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+
+      if (
+        limpio.includes("bajo") ||
+        limpio.includes("low")
+      ) {
+        return {
+          label: original || "Bajo",
+          cssClass: "badge-bajo"
+        };
+      }
+
+      if (
+        limpio.includes("medio") ||
+        limpio.includes("medium")
+      ) {
+        return {
+          label: original || "Medio",
+          cssClass: "badge-medio"
+        };
+      }
+
+      if (
+        limpio.includes("alto") ||
+        limpio.includes("high")
+      ) {
+        return {
+          label: original || "Alto",
+          cssClass: "badge-alto"
+        };
+      }
+
+      return {
+        label: original || "No disponible",
+        cssClass: "badge-default"
+      };
     }
 
-    function mostrarInfo(mensaje) {
-      msgZ.innerHTML = `<div class="msg msg-info">${mensaje}</div>`;
+
+    /* =========================================================
+       NORMALIZAR PROBABILIDAD
+       ========================================================= */
+
+    function normalizarProbabilidad(valor) {
+
+      const numero = Number(valor);
+
+      if (!Number.isFinite(numero)) {
+        return 0;
+      }
+
+      /*
+       * Acepta:
+       *
+       * 0.9472
+       *
+       * o:
+       *
+       * 94.72
+       */
+
+      if (numero > 1) {
+        return Math.max(
+          0,
+          Math.min(numero / 100, 1)
+        );
+      }
+
+      return Math.max(
+        0,
+        Math.min(numero, 1)
+      );
     }
+
+
+    /* =========================================================
+       ANTIGÜEDAD
+       ========================================================= */
+
+    function calcularAntiguedad(anioModelo) {
+
+      const antiguedad =
+        CONFIG.ANIO_REFERENCIA -
+        Number(anioModelo);
+
+      return Math.max(
+        0,
+        antiguedad
+      );
+    }
+
+
+    function obtenerEstadoVehiculo(antiguedad) {
+
+      if (antiguedad <= 0) {
+        return "Nuevo";
+      }
+
+      if (antiguedad <= 3) {
+        return "Seminuevo";
+      }
+
+      if (antiguedad <= 10) {
+        return "Usado";
+      }
+
+      return "Antiguo";
+    }
+
+
+    /* =========================================================
+       DISTRIBUCIÓN DE PROBABILIDADES
+       ========================================================= */
+
+    function renderDistribucion(probabilidades) {
+
+      distributionList.innerHTML = "";
+
+      if (!probabilidades) {
+        distribution.style.display = "none";
+        return;
+      }
+
+      let entries = [];
+
+      if (
+        typeof probabilidades === "object" &&
+        !Array.isArray(probabilidades)
+      ) {
+        entries =
+          Object.entries(probabilidades);
+      }
+
+      if (Array.isArray(probabilidades)) {
+        entries = probabilidades.map(item => [
+          item.categoria ||
+          item.label ||
+          item.nombre ||
+          "Categoría",
+
+          item.probabilidad ??
+          item.probability ??
+          item.valor ??
+          0
+        ]);
+      }
+
+      if (!entries.length) {
+        distribution.style.display = "none";
+        return;
+      }
+
+      entries
+        .sort(
+          (a, b) =>
+            normalizarProbabilidad(b[1]) -
+            normalizarProbabilidad(a[1])
+        )
+        .forEach(([nombre, valor]) => {
+
+          const prob =
+            normalizarProbabilidad(valor);
+
+          const porcentaje =
+            (prob * 100).toFixed(2);
+
+          const row =
+            document.createElement("div");
+
+          row.className =
+            "probability-row";
+
+          const name =
+            document.createElement("div");
+
+          name.className =
+            "probability-name";
+
+          name.textContent =
+            String(nombre);
+
+
+          const track =
+            document.createElement("div");
+
+          track.className =
+            "probability-track";
+
+          const bar =
+            document.createElement("div");
+
+          bar.className =
+            "probability-bar";
+
+          bar.style.width =
+            `${prob * 100}%`;
+
+          track.appendChild(bar);
+
+
+          const value =
+            document.createElement("div");
+
+          value.className =
+            "probability-value";
+
+          value.textContent =
+            `${porcentaje}%`;
+
+          row.append(
+            name,
+            track,
+            value
+          );
+
+          distributionList.appendChild(row);
+        });
+
+      distribution.style.display =
+        "block";
+    }
+
+
+    /* =========================================================
+       ESTADO DE CARGA
+       ========================================================= */
+
+    function activarEstadoCarga(cargando) {
+
+      btnPredecir.disabled = cargando;
+      btnLimpiar.disabled = cargando;
+
+      if (cargando) {
+
+        btnPredecir.innerHTML =
+          `<span class="spinner"></span>
+           Procesando predicción...`;
+
+      } else {
+
+        btnPredecir.textContent =
+          "🔮 Predecir categoría";
+      }
+    }
+
+
+    /* =========================================================
+       LIMPIAR
+       ========================================================= */
+
+    btnLimpiar.addEventListener(
+      "click",
+      () => {
+
+        form.reset();
+
+        limpiarErroresValidacion();
+        limpiarMensajes();
+
+        resultPanel.style.display =
+          "none";
+
+        resultEmpty.style.display =
+          "block";
+
+        progressFill.style.width =
+          "0%";
+
+        progressBar.setAttribute(
+          "aria-valuenow",
+          "0"
+        );
+
+        distribution.style.display =
+          "none";
+
+        distributionList.innerHTML = "";
+      }
+    );
+
+
+    /* =========================================================
+       LIMPIAR MENSAJES
+       ========================================================= */
+
+    function limpiarMensajes() {
+      msgZone.innerHTML = "";
+    }
+
+
+    /* =========================================================
+       MENSAJES
+       ========================================================= */
+
+    function mostrarMensaje(
+      tipo,
+      mensaje
+    ) {
+
+      limpiarMensajes();
+
+      const div =
+        document.createElement("div");
+
+      div.className =
+        `msg msg-${tipo}`;
+
+      div.textContent =
+        mensaje;
+
+      msgZone.appendChild(div);
+    }
+
+
+    function mostrarErrorPrediccion(error) {
+
+      let mensaje =
+        obtenerMensajeError(error);
+
+      if (error?.status === 422) {
+
+        mensaje =
+          `Los datos enviados no cumplen las validaciones de la API. ${mensaje}`;
+
+      } else if (error?.status === 500) {
+
+        mensaje =
+          `El servidor produjo un error interno. ${mensaje}`;
+
+      } else if (
+        error?.message?.includes("espera")
+      ) {
+
+        mensaje =
+          `La API tardó demasiado en responder. Verifique que Render no esté iniciando el servicio y vuelva a intentar.`;
+      }
+
+      mostrarMensaje(
+        "error",
+        `❌ No fue posible generar la predicción. ${mensaje}`
+      );
+
+      resultPanel.style.display =
+        "none";
+
+      resultEmpty.style.display =
+        "block";
+    }
+
+
+    function obtenerMensajeError(error) {
+
+      return (
+        error?.message ||
+        "Error desconocido."
+      );
+    }
+
+
+    /* =========================================================
+       FORMATEAR NÚMEROS
+       ========================================================= */
+
+    function formatearNumero(numero) {
+
+      return new Intl.NumberFormat(
+        "es-EC"
+      ).format(Number(numero));
+    }
+
+
+    /* =========================================================
+       VALIDACIÓN EN TIEMPO REAL
+       ========================================================= */
+
+    [
+      "marca",
+      "clase",
+      "combustible",
+      "cilindraje",
+      "anio"
+    ].forEach(id => {
+
+      const element =
+        document.getElementById(id);
+
+      element.addEventListener(
+        "change",
+        () => {
+
+          const field =
+            document.getElementById(
+              `field-${id}`
+            );
+
+          field?.classList.remove(
+            "invalid"
+          );
+        }
+      );
+
+      element.addEventListener(
+        "input",
+        () => {
+
+          const field =
+            document.getElementById(
+              `field-${id}`
+            );
+
+          field?.classList.remove(
+            "invalid"
+          );
+        }
+      );
+    });
+
+
+    /* =========================================================
+       TECLA ESC
+       ========================================================= */
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (event.key === "Escape") {
+          limpiarMensajes();
+        }
+      }
+    );
   </script>
 </body>
 </html>
